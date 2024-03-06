@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 
 import ExpoKeepAwake from './ExpoKeepAwake';
 import { KeepAwakeListener, KeepAwakeOptions } from './KeepAwake.types';
+import { Platform } from 'react-native';
 
 /** Default tag, used when no tag has been specified in keep awake method calls. */
 export const ExpoKeepAwakeTag = 'ExpoKeepAwakeDefaultTag';
@@ -26,20 +27,22 @@ export async function isAvailableAsync(): Promise<boolean> {
  */
 export function useKeepAwake(tag: string = ExpoKeepAwakeTag, options?: KeepAwakeOptions): void {
   useEffect(() => {
-    let isMounted = true;
-    activateKeepAwakeAsync(tag).then(() => {
-      if (isMounted && ExpoKeepAwake.addListenerForTag && options?.listener) {
-        addListener(tag, options.listener);
-      }
-    });
-    return () => {
-      isMounted = false;
-      if (options?.suppressDeactivateWarnings) {
-        deactivateKeepAwake(tag).catch(() => {});
-      } else {
-        deactivateKeepAwake(tag);
-      }
-    };
+    if (Platform.OS === 'android') {
+      let isMounted = true;
+      activateKeepAwakeAsync(tag).then(() => {
+        if (isMounted && ExpoKeepAwake.addListenerForTag && options?.listener) {
+          addListener(tag, options.listener);
+        }
+      });
+      return () => {
+        isMounted = false;
+        if (options?.suppressDeactivateWarnings) {
+          deactivateKeepAwake(tag).catch(() => { });
+        } else {
+          deactivateKeepAwake(tag);
+        }
+      };
+    }
   }, [tag]);
 }
 
